@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Football Match Report Generator</title>
+    <style>
+      :root {
+        --background: #121212;
+        --surface: #1e1e1e;
+        --surface-light: #2d2d2d;
+        --glow-green: #00ff41;
+        --text-primary: #e0e0e0;
+        --text-secondary: #b0b0b0;
+      }
+
+      body {
+        background-color: var(--background);
+        color: var(--text-primary);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .container {
+        width: 90%;
+        max-width: 900px;
+        margin: 2rem auto;
+      }
+
+      h1,
+      h2,
+      h3 {
+        color: var(--glow-green);
+        text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        letter-spacing: 1px;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 2.5rem;
+      }
+
+      .input-section {
+        background-color: var(--surface);
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+        margin-bottom: 2rem;
+      }
+
+      .input-group {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
+
+      input {
+        flex-grow: 1;
+        padding: 0.8rem 1rem;
+        background-color: var(--surface-light);
+        border: 1px solid var(--glow-green);
+        border-radius: 4px;
+        color: var(--text-primary);
+        font-size: 1rem;
+        box-shadow: 0 0 8px rgba(0, 255, 65, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      input:focus {
+        outline: none;
+        box-shadow: 0 0 12px rgba(0, 255, 65, 0.5);
+      }
+
+      button {
+        padding: 0.8rem 1.5rem;
+        background-color: var(--surface-light);
+        border: 2px solid var(--glow-green);
+        border-radius: 4px;
+        color: var(--glow-green);
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 8px rgba(0, 255, 65, 0.2);
+      }
+
+      button:hover {
+        background-color: rgba(0, 255, 65, 0.1);
+        box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+      }
+
+      button:active {
+        transform: translateY(2px);
+      }
+
+      .loading {
+        text-align: center;
+        display: none;
+        margin: 2rem 0;
+      }
+
+      .loader {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(0, 255, 65, 0.3);
+        border-radius: 50%;
+        border-top-color: var(--glow-green);
+        animation: spin 1s ease-in-out infinite;
+        margin-bottom: 1rem;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .results {
+        display: none;
+        background-color: var(--surface);
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+      }
+
+      .report-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background-color: var(--surface-light);
+        border-radius: 6px;
+        border-left: 4px solid var(--glow-green);
+        box-shadow: 0 0 10px rgba(0, 255, 65, 0.1);
+      }
+
+      .report-section h3 {
+        margin-top: 0;
+        display: flex;
+        align-items: center;
+      }
+
+      .report-section h3::before {
+        content: "●";
+        color: var(--glow-green);
+        margin-right: 10px;
+        font-size: 1.2rem;
+        text-shadow: 0 0 8px var(--glow-green);
+      }
+
+      .report-content {
+        line-height: 1.6;
+        color: var(--text-secondary);
+      }
+
+      .overall-report {
+        border-left-width: 6px;
+        box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+      }
+
+      .overall-report h3 {
+        color: var(--glow-green);
+        font-size: 1.5rem;
+      }
+
+      .error-message {
+        background-color: rgba(255, 50, 50, 0.2);
+        color: #ff6b6b;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-top: 1rem;
+        border-left: 4px solid #ff6b6b;
+        display: none;
+      }
+
+      footer {
+        margin-top: auto;
+        text-align: center;
+        padding: 1rem;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>⚽ Football Match Report Generator</h1>
+
+      <div class="input-section">
+        <div class="input-group">
+          <input
+            type="text"
+            id="match-url"
+            placeholder="Enter match commentary URL..."
+          />
+          <button id="generate-btn">Generate Reports</button>
+        </div>
+        <div class="error-message" id="error-display"></div>
+      </div>
+
+      <div class="loading" id="loading">
+        <div class="loader"></div>
+        <p>Generating match reports... This may take a moment.</p>
+      </div>
+
+      <div class="results" id="results">
+        <div class="report-section">
+          <h3>First Quarter Report</h3>
+          <div class="report-content" id="quarter1"></div>
+        </div>
+
+        <div class="report-section">
+          <h3>Second Quarter Report</h3>
+          <div class="report-content" id="quarter2"></div>
+        </div>
+
+        <div class="report-section">
+          <h3>Third Quarter Report</h3>
+          <div class="report-content" id="quarter3"></div>
+        </div>
+
+        <div class="report-section">
+          <h3>Fourth Quarter Report</h3>
+          <div class="report-content" id="quarter4"></div>
+        </div>
+
+        <div class="report-section overall-report">
+          <h3>Overall Match Report</h3>
+          <div class="report-content" id="overall"></div>
+        </div>
+      </div>
+    </div>
+
+    <footer>Football Match Report Generator © 2025</footer>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const generateBtn = document.getElementById("generate-btn");
+        const matchUrlInput = document.getElementById("match-url");
+        const loadingSection = document.getElementById("loading");
+        const resultsSection = document.getElementById("results");
+        const errorDisplay = document.getElementById("error-display");
+
+        // API endpoint - replace with your actual endpoint
+        const API_ENDPOINT = "http://localhost:8000/generate-report";
+
+        generateBtn.addEventListener("click", async function () {
+          const url = matchUrlInput.value.trim();
+
+          if (!url) {
+            showError("Please enter a match URL");
+            return;
+          }
+
+          // Reset UI
+          hideError();
+          showLoading();
+          hideResults();
+
+          try {
+            const response = await fetch(API_ENDPOINT, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ url }),
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.detail || "Failed to generate reports");
+            }
+
+            const data = await response.json();
+
+            // Display results
+            document.getElementById("quarter1").textContent =
+              data.quarter1_report;
+            document.getElementById("quarter2").textContent =
+              data.quarter2_report;
+            document.getElementById("quarter3").textContent =
+              data.quarter3_report;
+            document.getElementById("quarter4").textContent =
+              data.quarter4_report;
+            document.getElementById("overall").textContent =
+              data.overall_report;
+
+            hideLoading();
+            showResults();
+          } catch (error) {
+            hideLoading();
+            showError(error.message);
+          }
+        });
+
+        // Utility functions
+        function showLoading() {
+          loadingSection.style.display = "block";
+        }
+
+        function hideLoading() {
+          loadingSection.style.display = "none";
+        }
+
+        function showResults() {
+          resultsSection.style.display = "block";
+        }
+
+        function hideResults() {
+          resultsSection.style.display = "none";
+        }
+
+        function showError(message) {
+          errorDisplay.textContent = message;
+          errorDisplay.style.display = "block";
+        }
+
+        function hideError() {
+          errorDisplay.style.display = "none";
+        }
+      });
+    </script>
+  </body>
+</html>
